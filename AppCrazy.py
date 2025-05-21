@@ -4,6 +4,10 @@ import time
 import math
 import random
 
+
+'''
+    数字雨效果
+'''
 class MatrixRain:
     def __init__(self, canvas, width, height):
         self.canvas = canvas
@@ -46,12 +50,27 @@ class MatrixRain:
             if drop['y'] > self.height:
                 drop['y'] = random.randint(-100, 0)
 
+'''
+    智商查询器
+    100% AI生成
+    100% 原创
+    100% 无bug
+    100% 无广告
+    100% 无水印
+    100% 无后门
+    100% 无病毒
+    100% 无木马
+    100% 无漏洞
+    2025年5月21日
+'''
 class IQQueryApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("智商查询器V1.0")
+        self.root.title("智商查询器V1.0 AI版")
         self.root.configure(bg='#000000')
         self.root.geometry("500x600")
+        self.root.icon = tk.PhotoImage(file='./icons/app_icon.png')
+        self.root.iconphoto(False, self.root.icon)
         
         # 创建画布用于数字雨效果
         self.canvas = tk.Canvas(root, width=500, height=600, bg='#000000', highlightthickness=0)
@@ -159,18 +178,22 @@ class IQQueryApp:
             command=lambda: self.animate_button_click(self.query_button, self.query_iq),
             **button_style
         )
-        self.query_button.pack(side=tk.LEFT, padx=10)
+        self.query_button.pack(padx=10)
         
-        self.apply_button = tk.Button(
-            button_frame,
-            text="应用",
-            command=lambda: self.animate_button_click(self.apply_button, self.apply_iq),
-            **button_style
+
+        
+        # 添加AI计算说明标签
+        self.ai_label = tk.Label(
+            main_frame,
+            text="AI计算，科学合理",
+            font=self.label_font,
+            fg="#00ff00",
+            bg='#000000'
         )
-        self.apply_button.pack(side=tk.LEFT, padx=10)
+        self.ai_label.pack(pady=10)
         
         # 绑定鼠标悬停事件
-        for button in [self.query_button, self.apply_button]:
+        for button in [self.query_button]:
             button.bind('<Enter>', lambda e, b=button: self.on_enter(b))
             button.bind('<Leave>', lambda e, b=button: self.on_leave(b))
         
@@ -229,13 +252,33 @@ class IQQueryApp:
         if isinstance(iq, str):
             return "这个智商值有点神秘..."
         if iq >= 100:
-            return "哇！您简直就是天才！建议去拯救世界！"
+            return random.choice([
+                "哇！您简直就是天才！建议去拯救世界！",
+                "您的智商已经突破天际，建议去火星定居！",
+                "这么高的智商，您是不是偷偷吃了什么补脑神药？",
+                "您的智商已经达到了AI的水平，建议去和ChatGPT比试比试！"
+            ])
         elif iq >= 80:
-            return "不错不错，是个聪明人！"
+            return random.choice([
+                "不错不错，是个聪明人！",
+                "您的智商已经超过了全国80%的人，继续保持！",
+                "这个智商水平，建议去参加最强大脑！",
+                "您的智商已经可以碾压大多数人了！"
+            ])
         elif iq >= 60:
-            return "还行，继续努力！"
+            return random.choice([
+                "还行，继续努力！",
+                "您的智商还有提升空间，建议多吃点核桃！",
+                "这个智商水平，建议去参加《一站到底》！",
+                "您的智商已经超过了及格线，可喜可贺！"
+            ])
         else:
-            return "这个...建议多吃点核桃补补脑..."
+            return random.choice([
+                "这个...建议多吃点核桃补补脑...",
+                "您的智商可能需要充值了...",
+                "这个智商水平，建议去参加《开心辞典》！",
+                "您的智商已经达到了可爱水平，继续保持！"
+            ])
     
     def query_iq(self):
         name = self.name_entry.get().strip()
@@ -298,23 +341,39 @@ class IQQueryApp:
         elif "笨蛋" in name or "傻瓜" in name:
             return random.randint(0, 30)
         
-        # 默认返回随机智商值
-        return random.randint(60, 120)
+        # 根据名字长度计算基础智商
+        base_iq = len(name) * 10
+        
+        # 随机因素
+        random_factor = random.randint(-20, 20)
+        
+        # 特殊规则
+        if "王" in name:
+            random_factor += 15  # 姓王的智商加成
+        if "李" in name:
+            random_factor += 10  # 姓李的智商加成
+        if "张" in name:
+            random_factor += 5   # 姓张的智商加成
+            
+        # 根据时间计算额外加成
+        current_hour = time.localtime().tm_hour
+        if 0 <= current_hour < 6:
+            random_factor -= 10  # 熬夜会降低智商
+        elif 6 <= current_hour < 12:
+            random_factor += 15  # 早上智商最高
+        elif 12 <= current_hour < 18:
+            random_factor += 5   # 下午智商一般
+        else:
+            random_factor -= 5   # 晚上智商略低
+            
+        # 计算最终智商
+        final_iq = base_iq + random_factor
+        
+        # 确保智商在合理范围内
+        final_iq = max(0, min(200, final_iq))
+        
+        return final_iq
     
-    def apply_iq(self):
-        # 添加应用动画效果
-        self.apply_button.configure(bg='#00ff00', fg='#000000')
-        self.root.update()
-        time.sleep(0.2)
-        self.apply_button.configure(bg='#000000', fg='#00ff00')
-        
-        # 显示成功消息
-        messagebox.showinfo("提示", "应用成功！")
-        
-        # 重置输入框
-        self.name_entry.delete(0, tk.END)
-        self.iq_entry.delete(0, tk.END)
-        self.comment_label.configure(text="")
 
 if __name__ == "__main__":
     root = tk.Tk()
