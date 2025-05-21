@@ -77,7 +77,7 @@ class IQQueryApp:
         self.root.title("智商查询器V1.0 AI版")
         self.root.configure(bg='#000000')
         self.root.geometry("900x1600")  # 修改为9:16比例
-        self.root.icon = tk.PhotoImage(file='./icons/app_icon.png')
+        self.root.icon = tk.PhotoImage(file='./icons/IQQueryApp.png')
         self.root.iconphoto(False, self.root.icon)
         
         # 创建画布用于数字雨效果
