@@ -1,0 +1,322 @@
+import tkinter as tk
+from tkinter import messagebox, font
+import time
+import math
+import random
+
+class MatrixRain:
+    def __init__(self, canvas, width, height):
+        self.canvas = canvas
+        self.width = width
+        self.height = height
+        self.chars = "0123456789ABCDEF"
+        self.drops = []
+        self.init_drops()
+        
+    def init_drops(self):
+        for i in range(0, self.width, 15):  # 减小间距，使数字雨更密集
+            self.drops.append({
+                'x': i,
+                'y': random.randint(-100, 0),
+                'speed': random.randint(2, 5),
+                'length': random.randint(5, 15)
+            })
+    
+    def update(self):
+        self.canvas.delete("matrix")
+        for drop in self.drops:
+            # 绘制数字
+            for i in range(drop['length']):
+                char = random.choice(self.chars)
+                y = drop['y'] - i * 20
+                if 0 <= y < self.height:
+                    # 根据位置调整透明度
+                    alpha = 1.0 - (i / drop['length'])
+                    color = f'#{int(0 * alpha):02x}{int(255 * alpha):02x}{int(0 * alpha):02x}'
+                    self.canvas.create_text(
+                        drop['x'], y,
+                        text=char,
+                        fill=color,
+                        font=('Courier New', 12),
+                        tags="matrix"
+                    )
+            
+            # 更新位置
+            drop['y'] += drop['speed']
+            if drop['y'] > self.height:
+                drop['y'] = random.randint(-100, 0)
+
+class IQQueryApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("智商查询器V1.0")
+        self.root.configure(bg='#000000')
+        self.root.geometry("500x600")
+        
+        # 创建画布用于数字雨效果
+        self.canvas = tk.Canvas(root, width=500, height=600, bg='#000000', highlightthickness=0)
+        self.canvas.place(x=0, y=0)
+        self.matrix_rain = MatrixRain(self.canvas, 500, 600)
+        
+        # 设置自定义字体
+        self.title_font = font.Font(family="Courier New", size=16, weight="bold")
+        self.label_font = font.Font(family="Courier New", size=12)
+        self.button_font = font.Font(family="Courier New", size=12, weight="bold")
+        
+        # 创建标题
+        self.title_label = tk.Label(
+            root,
+            text="智商查询器V1.0",
+            font=self.title_font,
+            fg="#00ff00",
+            bg='#000000'
+        )
+        self.title_label.place(relx=0.5, rely=0.1, anchor='center')
+        
+        # 创建主框架
+        main_frame = tk.Frame(root, bg='#000000')
+        main_frame.place(relx=0.5, rely=0.5, anchor='center')
+        
+        # 创建并布局GUI元素
+        self.name_label = tk.Label(
+            main_frame,
+            text="请输入姓名：",
+            font=self.label_font,
+            fg="#00ff00",
+            bg='#000000',
+            bd=0,
+            highlightthickness=0
+        )
+        self.name_label.pack(pady=10)
+        
+        self.name_entry = tk.Entry(
+            main_frame,
+            font=self.label_font,
+            bg='#000000',
+            fg='#00ff00',
+            insertbackground='#00ff00',
+            relief='flat',
+            highlightthickness=1,
+            highlightbackground='#00ff00',
+            highlightcolor='#00ff00'
+        )
+        self.name_entry.pack(pady=5, ipady=5, ipadx=10)
+        
+        self.iq_label = tk.Label(
+            main_frame,
+            text="您的智商为：",
+            font=self.label_font,
+            fg="#00ff00",
+            bg='#000000'
+        )
+        self.iq_label.pack(pady=10)
+        
+        self.iq_entry = tk.Entry(
+            main_frame,
+            font=self.label_font,
+            bg='#000000',
+            fg='#00ff00',
+            insertbackground='#00ff00',
+            relief='flat',
+            highlightthickness=1,
+            highlightbackground='#00ff00',
+            highlightcolor='#00ff00'
+        )
+        self.iq_entry.pack(pady=5, ipady=5, ipadx=10)
+        
+        # 创建评语标签
+        self.comment_label = tk.Label(
+            main_frame,
+            text="",
+            font=self.label_font,
+            fg="#00ff00",
+            bg='#000000',
+            wraplength=350
+
+        )
+        self.comment_label.pack(pady=10)
+        
+        # 创建按钮框架
+        button_frame = tk.Frame(main_frame, bg='#000000')
+        button_frame.pack(pady=30)
+        
+        # 创建按钮样式
+        button_style = {
+            'font': self.button_font,
+            'bg': '#000000',
+            'fg': '#00ff00',
+            'activebackground': '#00ff00',
+            'activeforeground': '#000000',
+            'relief': 'flat',
+            'borderwidth': 0,
+            'padx': 20,
+            'pady': 10
+        }
+        
+        self.query_button = tk.Button(
+            button_frame,
+            text="开始查询",
+            command=lambda: self.animate_button_click(self.query_button, self.query_iq),
+            **button_style
+        )
+        self.query_button.pack(side=tk.LEFT, padx=10)
+        
+        self.apply_button = tk.Button(
+            button_frame,
+            text="应用",
+            command=lambda: self.animate_button_click(self.apply_button, self.apply_iq),
+            **button_style
+        )
+        self.apply_button.pack(side=tk.LEFT, padx=10)
+        
+        # 绑定鼠标悬停事件
+        for button in [self.query_button, self.apply_button]:
+            button.bind('<Enter>', lambda e, b=button: self.on_enter(b))
+            button.bind('<Leave>', lambda e, b=button: self.on_leave(b))
+        
+        # 启动数字雨动画
+        self.update_matrix()
+    
+    def update_matrix(self):
+        self.matrix_rain.update()
+        self.root.after(50, self.update_matrix)
+    
+    def animate_button_click(self, button, callback):
+        """按钮点击动画效果"""
+        original_bg = button.cget('bg')
+        original_fg = button.cget('fg')
+        
+        # 缩放动画
+        def scale_animation(scale=1.0, step=0.1):
+            if scale <= 0.8:
+                scale = 0.8
+                button.configure(bg='#00ff00', fg='#000000')
+                self.root.update()
+                time.sleep(0.1)
+                button.configure(bg=original_bg, fg=original_fg)
+                callback()
+                return
+            
+            self.root.update()
+            time.sleep(0.01)
+            scale_animation(scale - step)
+        
+        scale_animation()
+    
+    def on_enter(self, button):
+        """鼠标悬停效果"""
+        button.configure(bg='#00ff00', fg='#000000')
+    
+    def on_leave(self, button):
+        """鼠标离开效果"""
+        button.configure(bg='#000000', fg='#00ff00')
+    
+    def get_iq_color(self, iq):
+        """根据智商值返回对应的颜色"""
+        if isinstance(iq, str):
+            return '#ffffff'
+        if iq >= 100:
+            return '#00ff00'  # 矩阵绿色
+        elif iq >= 80:
+            return '#00ffff'  # 青色
+        elif iq >= 60:
+            return '#ffff00'  # 黄色
+        else:
+            return '#ff0000'  # 红色
+    
+    def get_iq_comment(self, iq):
+        """根据智商值返回评语"""
+        if isinstance(iq, str):
+            return "这个智商值有点神秘..."
+        if iq >= 100:
+            return "哇！您简直就是天才！建议去拯救世界！"
+        elif iq >= 80:
+            return "不错不错，是个聪明人！"
+        elif iq >= 60:
+            return "还行，继续努力！"
+        else:
+            return "这个...建议多吃点核桃补补脑..."
+    
+    def query_iq(self):
+        name = self.name_entry.get().strip()
+        if not name:
+            messagebox.showwarning("警告", "请输入姓名！")
+            return
+        
+        # 添加查询动画效果
+        self.iq_entry.delete(0, tk.END)
+        self.iq_entry.insert(0, "计算中")
+        self.root.update()
+        
+        # 动态加载动画
+        for i in range(5):
+            self.iq_entry.delete(0, tk.END)
+            self.iq_entry.insert(0, "计算中" + "." * (i + 1))
+            self.root.update()
+            time.sleep(0.2)
+        
+        iq = self.get_iq_by_name(name)
+        
+        # 结果渐变动画
+        self.iq_entry.delete(0, tk.END)
+        self.iq_entry.insert(0, str(iq))
+        color = self.get_iq_color(iq)
+        self.iq_entry.configure(fg=color)
+        self.root.update()
+        time.sleep(0.3)
+        
+        # 显示评语
+        comment = self.get_iq_comment(iq)
+        self.comment_label.configure(text=comment, fg=color)
+    
+    def get_iq_by_name(self, name):
+        name = name.lower()
+        # 特殊人物
+        special_names = {
+            "关羽": 99,
+            "诸葛亮": 100,
+            "张飞": 60,
+            "你": 0,
+            "爱因斯坦": 200,
+            "牛顿": 190,
+            "达芬奇": 180,
+            "爱迪生": 170,
+            "岳云鹏": 80,
+            "于谦": 70,
+            "宋小宝": 65
+        }
+        
+        # 检查是否是特殊人物
+        if name in special_names:
+            return special_names[name]
+        
+        # 检查是否包含特殊关键词
+        if "天才" in name:
+            return random.randint(150, 200)
+        elif "聪明" in name:
+            return random.randint(120, 150)
+        elif "笨蛋" in name or "傻瓜" in name:
+            return random.randint(0, 30)
+        
+        # 默认返回随机智商值
+        return random.randint(60, 120)
+    
+    def apply_iq(self):
+        # 添加应用动画效果
+        self.apply_button.configure(bg='#00ff00', fg='#000000')
+        self.root.update()
+        time.sleep(0.2)
+        self.apply_button.configure(bg='#000000', fg='#00ff00')
+        
+        # 显示成功消息
+        messagebox.showinfo("提示", "应用成功！")
+        
+        # 重置输入框
+        self.name_entry.delete(0, tk.END)
+        self.iq_entry.delete(0, tk.END)
+        self.comment_label.configure(text="")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = IQQueryApp(root)
+    root.mainloop()
