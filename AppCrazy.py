@@ -18,12 +18,13 @@ class MatrixRain:
         self.init_drops()
         
     def init_drops(self):
-        for i in range(0, self.width, 15):  # 减小间距，使数字雨更密集
+        # 增加间距，减少数字雨密度
+        for i in range(0, self.width, 30):  # 从15改为30，减少密度
             self.drops.append({
                 'x': i,
                 'y': random.randint(-100, 0),
-                'speed': random.randint(2, 5),
-                'length': random.randint(5, 15)
+                'speed': random.randint(2, 4),  # 降低速度范围
+                'length': random.randint(3, 8)  # 减少长度范围
             })
     
     def update(self):
@@ -32,11 +33,18 @@ class MatrixRain:
             # 绘制数字
             for i in range(drop['length']):
                 char = random.choice(self.chars)
-                y = drop['y'] - i * 20
+                y = drop['y'] - i * 30  # 增加间距，从20改为30
                 if 0 <= y < self.height:
-                    # 根据位置调整透明度
+                    # 简化透明度计算
                     alpha = 1.0 - (i / drop['length'])
-                    color = f'#{int(0 * alpha):02x}{int(255 * alpha):02x}{int(0 * alpha):02x}'
+                    # 使用预定义的颜色而不是每次都计算
+                    if alpha > 0.7:
+                        color = '#00ff00'  # 最亮
+                    elif alpha > 0.4:
+                        color = '#00cc00'  # 中等
+                    else:
+                        color = '#009900'  # 最暗
+                    
                     self.canvas.create_text(
                         drop['x'], y,
                         text=char,
@@ -68,19 +76,19 @@ class IQQueryApp:
         self.root = root
         self.root.title("智商查询器V1.0 AI版")
         self.root.configure(bg='#000000')
-        self.root.geometry("500x600")
+        self.root.geometry("900x1600")  # 修改为9:16比例
         self.root.icon = tk.PhotoImage(file='./icons/app_icon.png')
         self.root.iconphoto(False, self.root.icon)
         
         # 创建画布用于数字雨效果
-        self.canvas = tk.Canvas(root, width=500, height=600, bg='#000000', highlightthickness=0)
+        self.canvas = tk.Canvas(root, width=900, height=1600, bg='#000000', highlightthickness=0)
         self.canvas.place(x=0, y=0)
-        self.matrix_rain = MatrixRain(self.canvas, 1200, 600)
+        self.matrix_rain = MatrixRain(self.canvas, 900, 1600)
         
         # 设置自定义字体
-        self.title_font = font.Font(family="Courier New", size=16, weight="bold")
-        self.label_font = font.Font(family="Courier New", size=12)
-        self.button_font = font.Font(family="Courier New", size=12, weight="bold")
+        self.title_font = font.Font(family="Courier New", size=32, weight="bold")  # 放大标题字体
+        self.label_font = font.Font(family="Courier New", size=24)  # 放大标签字体
+        self.button_font = font.Font(family="Courier New", size=24, weight="bold")  # 放大按钮字体
         
         # 创建标题
         self.title_label = tk.Label(
@@ -106,7 +114,7 @@ class IQQueryApp:
             bd=0,
             highlightthickness=0
         )
-        self.name_label.pack(pady=10)
+        self.name_label.pack(pady=20)  # 增加间距
         
         self.name_entry = tk.Entry(
             main_frame,
@@ -119,7 +127,7 @@ class IQQueryApp:
             highlightbackground='#00ff00',
             highlightcolor='#00ff00'
         )
-        self.name_entry.pack(pady=5, ipady=5, ipadx=10)
+        self.name_entry.pack(pady=10, ipady=10, ipadx=20)  # 增加输入框大小
         
         self.iq_label = tk.Label(
             main_frame,
@@ -128,7 +136,7 @@ class IQQueryApp:
             fg="#00ff00",
             bg='#000000'
         )
-        self.iq_label.pack(pady=10)
+        self.iq_label.pack(pady=20)  # 增加间距
         
         self.iq_entry = tk.Entry(
             main_frame,
@@ -141,7 +149,7 @@ class IQQueryApp:
             highlightbackground='#00ff00',
             highlightcolor='#00ff00'
         )
-        self.iq_entry.pack(pady=5, ipady=5, ipadx=10)
+        self.iq_entry.pack(pady=10, ipady=10, ipadx=20)  # 增加输入框大小
         
         # 创建评语标签
         self.comment_label = tk.Label(
@@ -150,14 +158,13 @@ class IQQueryApp:
             font=self.label_font,
             fg="#00ff00",
             bg='#000000',
-            wraplength=350
-
+            wraplength=700  # 增加文本换行宽度
         )
-        self.comment_label.pack(pady=10)
+        self.comment_label.pack(pady=20)  # 增加间距
         
         # 创建按钮框架
         button_frame = tk.Frame(main_frame, bg='#000000')
-        button_frame.pack(pady=30)
+        button_frame.pack(pady=40)  # 增加按钮区域间距
         
         # 创建按钮样式
         button_style = {
@@ -168,8 +175,8 @@ class IQQueryApp:
             'activeforeground': '#000000',
             'relief': 'flat',
             'borderwidth': 0,
-            'padx': 20,
-            'pady': 10
+            'padx': 40,  # 增加按钮内边距
+            'pady': 20   # 增加按钮内边距
         }
         
         self.query_button = tk.Button(
@@ -178,9 +185,7 @@ class IQQueryApp:
             command=lambda: self.animate_button_click(self.query_button, self.query_iq),
             **button_style
         )
-        self.query_button.pack(padx=10)
-        
-
+        self.query_button.pack(padx=20)  # 增加按钮间距
         
         # 添加AI计算说明标签
         self.ai_label = tk.Label(
@@ -190,19 +195,19 @@ class IQQueryApp:
             fg="#00ff00",
             bg='#000000'
         )
-        self.ai_label.pack(pady=10)
+        self.ai_label.pack(pady=20)  # 增加间距
         
         # 绑定鼠标悬停事件
         for button in [self.query_button]:
             button.bind('<Enter>', lambda e, b=button: self.on_enter(b))
             button.bind('<Leave>', lambda e, b=button: self.on_leave(b))
         
-        # 启动数字雨动画
+        # 启动数字雨动画，降低更新频率
         self.update_matrix()
     
     def update_matrix(self):
         self.matrix_rain.update()
-        self.root.after(50, self.update_matrix)
+        self.root.after(100, self.update_matrix)  # 从50ms改为100ms，降低更新频率
     
     def animate_button_click(self, button, callback):
         """按钮点击动画效果"""
@@ -319,7 +324,8 @@ class IQQueryApp:
             "关羽": 99,
             "诸葛亮": 100,
             "张飞": 60,
-            "你": 0,
+            "我": 200,  # 修改"我"的智商为200
+            "你": 0,    # 修改"你"的智商为0
             "爱因斯坦": 200,
             "牛顿": 190,
             "达芬奇": 180,
