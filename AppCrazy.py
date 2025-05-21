@@ -75,7 +75,7 @@ class IQQueryApp:
         # 创建画布用于数字雨效果
         self.canvas = tk.Canvas(root, width=500, height=600, bg='#000000', highlightthickness=0)
         self.canvas.place(x=0, y=0)
-        self.matrix_rain = MatrixRain(self.canvas, 500, 600)
+        self.matrix_rain = MatrixRain(self.canvas, 1200, 600)
         
         # 设置自定义字体
         self.title_font = font.Font(family="Courier New", size=16, weight="bold")
