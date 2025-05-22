@@ -93,28 +93,54 @@ class OpenYellowJoke:
         self.label2.configure(fg="yellow")
         
         # 将label2替换成图片（图片内容为images/hq.png）
-        self.animate_label2_step1()
+        self.animate_label2_step("hq.png")
+        time.sleep(0.4)
+        
+        self.animate_label2_step("hq2.png")
+        time.sleep(0.4)
+        
+        self.animate_label2_step("hq3.png")
+        time.sleep(0.4)
+        
+        self.animate_label2_step("hq4.png")
+        time.sleep(0.4)
 
+        self.animate_label2_step("hq5.png")
+        time.sleep(0.4)
 
+        self.animate_label2_step("hq6.png")
+        time.sleep(0.4)
+        self.animate_label2_step("hq7.png")
+        time.sleep(0.4)
+        self.animate_label2_step("hq8.png")
+        time.sleep(0.4)
+        self.animate_label2_step("hq9.png")
+        time.sleep(0.4)
+        
         # 然后变化为新的文本
-        self.show_button.configure(text="我不开黄腔了")
+        self.show_button.configure(text="已成功开黄腔")
         
         
         self.root.update()
         time.sleep(0.1)
-
-    def animate_label2_step1(self):
-
+    def animate_label2_image_path(self,imageName):
         # 获取脚本所在目录的绝对路径
         script_dir = os.path.dirname(os.path.abspath(__file__))
         # 构建图片的完整路径
-        image_path = os.path.join(script_dir, "images", "hq.png")
+        image_path = os.path.join(script_dir, "images", imageName)
+        return image_path
+
+
+    def animate_label2_step(self,imageName):
+        image_path = self.animate_label2_image_path(imageName)
         # 将label2替换成图片
         self.hq_image = tk.PhotoImage(file=image_path)
         self.label2.configure(image=self.hq_image)
         self.label2.image = self.hq_image
         self.label2.configure(text="")
-        
+        self.root.update()
+    
+
     def animate_button_click(self, button):
         """按钮点击动画效果"""
         original_bg = button.cget('bg')
