@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, font
 import time
+import os
 
 class OpenYellowJoke:
     def __init__(self, root):
@@ -25,6 +26,7 @@ class OpenYellowJoke:
             fg="#00ff00",
             bg='#000000'
         )
+
         self.label1.pack(side='left')
         
         self.label2 = tk.Label(
@@ -78,25 +80,41 @@ class OpenYellowJoke:
     def animate_text(self):
         # 先执行原有的空格动画
         #new_text_black=""
-        for i in range(10):
+        for i in range(15):
             #new_text_black = new_text_black+" "
             
             #self.label2.configure(text=new_text_black+"腔")
             new_font = font.Font(family="Courier New", size=32 + i * 4, weight="bold")
             self.label2.configure(font=new_font)
-
+            
             self.root.update()
             time.sleep(0.1)
-            
+        
         self.label2.configure(fg="yellow")
         
+        # 将label2替换成图片（图片内容为images/hq.png）
+        self.animate_label2_step1()
+
+
         # 然后变化为新的文本
         self.show_button.configure(text="我不开黄腔了")
         
         
         self.root.update()
         time.sleep(0.1)
-    
+
+    def animate_label2_step1(self):
+
+        # 获取脚本所在目录的绝对路径
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # 构建图片的完整路径
+        image_path = os.path.join(script_dir, "images", "hq.png")
+        # 将label2替换成图片
+        self.hq_image = tk.PhotoImage(file=image_path)
+        self.label2.configure(image=self.hq_image)
+        self.label2.image = self.hq_image
+        self.label2.configure(text="")
+        
     def animate_button_click(self, button):
         """按钮点击动画效果"""
         original_bg = button.cget('bg')
