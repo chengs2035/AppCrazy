@@ -1,0 +1,56 @@
+# 颜色定义
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (200, 200, 200)
+LIGHT_BLUE = (173, 216, 230)
+DARK_BLUE = (0, 0, 139)
+LIGHT_GREEN = (144, 238, 144)
+DARK_GREEN = (34, 139, 34)
+LIGHT_PINK = (255, 182, 193)
+DARK_PINK = (219, 112, 147)
+SHADOW_COLOR = (100, 100, 100)
+BUTTON_COLOR = LIGHT_PINK
+
+# 窗口设置
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+WINDOW_TITLE = "狗叫模拟器"
+FPS = 30
+
+# 字体设置
+FONT_SIZE = 36
+FONT_NAMES = [
+    "Microsoft YaHei",
+    "SimHei",
+    "SimSun",
+    "NSimSun",
+    "FangSong",
+    "KaiTi",
+    "WenQuanYi Micro Hei",
+    "WenQuanYi Zen Hei",
+    "Noto Sans CJK SC",
+    "PingFang SC",
+    "STHeiti",
+    "Hiragino Sans GB"
+]
+
+# 按钮和输入框尺寸设置
+BUTTON_WIDTH = 200
+BUTTON_HEIGHT = 50
+INPUT_WIDTH = 200
+INPUT_HEIGHT = 40
+IMAGE_SIZE = 200
+
+# 位置设置
+INPUT_X = (WINDOW_WIDTH - INPUT_WIDTH) // 2
+INPUT_Y = 100
+SELECT_BUTTON_X = (WINDOW_WIDTH - BUTTON_WIDTH) // 2
+SELECT_BUTTON_Y = 160
+BARK_BUTTON_X = (WINDOW_WIDTH - BUTTON_WIDTH) // 2
+BARK_BUTTON_Y = 230
+IMAGE_X = (WINDOW_WIDTH - IMAGE_SIZE) // 2
+IMAGE_Y = 300
+
+# 音效设置
+BARK_INTERVAL = 2000  # 叫叫间隔（毫秒）
+SOUND_EXTENSIONS = ['.mp3', '.wav'] 
