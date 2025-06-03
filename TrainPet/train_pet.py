@@ -1,85 +1,84 @@
-from PySide6.QtWidgets import QWidget, QGraphicsView, QGraphicsScene, QApplication
-from PySide6.QtCore import Qt, QPropertyAnimation, QPoint, QRect, QTimer, QSize
-from PySide6.QtGui import QPainter, QColor, QKeyEvent, QPixmap, QImage
-from train_config import train_config
+from PySide6.QtWidgets import QWidget, QApplication
+from PySide6.QtCore import Qt, QPropertyAnimation, QPoint, QTimer, QSize
+from PySide6.QtGui import QPainter, QKeyEvent, QMouseEvent
 import os
 
-class TrainImage:
-    """高铁图片管理类"""
-    def __init__(self):
-        # 修正图片路径：直接使用TrainPet目录下的images文件夹
-        self.image_path = os.path.join(os.path.dirname(__file__), 'images', 'train_all.png')
-        self.full_image = QPixmap(self.image_path)
-        if self.full_image.isNull():
-            raise FileNotFoundError(f"无法加载图片: {self.image_path}")
-            
-        print(f"图片路径: {self.image_path}")
-        print(f"完整图片尺寸: {self.full_image.width()}x{self.full_image.height()}")
-            
-        # 裁剪并缓存各部分图片
-        self.head = self._crop_image(*train_config.HEAD_POS)
-        self.body = self._crop_image(*train_config.BODY_POS)
-        self.tail = self._crop_image(*train_config.TAIL_POS)
-        
-        print(f"车头尺寸: {self.head.width()}x{self.head.height()}")
-        print(f"车厢尺寸: {self.body.width()}x{self.body.height()}")
-        print(f"车尾尺寸: {self.tail.width()}x{self.tail.height()}")
-        
-    def _crop_image(self, x: int, y: int, width: int, height: int) -> QPixmap:
-        """裁剪图片"""
-        pixmap = self.full_image.copy(x, y, width, height)
-        if pixmap.isNull():
-            print(f"警告: 裁剪图片失败 - 位置({x}, {y}), 尺寸({width}, {height})")
-        return pixmap
-        
-    def get_scaled_size(self, pixmap: QPixmap) -> QSize:
-        """获取缩放后的尺寸"""
-        return QSize(
-            int(pixmap.width() * train_config.SCALE_FACTOR),
-            int(pixmap.height() * train_config.SCALE_FACTOR)
-        )
+from train_config import train_config
+from components.train_component import TrainComponent
+from states.train_state import TrainState
+from states.border_state import BorderState
+from renderer.train_renderer import TrainRenderer
+from utils.image_loader import ImageLoader
+
 
 class TrainPet(QWidget):
+    """高铁宠物主窗口"""
     def __init__(self):
         super().__init__()
-        # 初始化图片资源
+        
+        # 初始化图片加载器
+        self._image_loader = ImageLoader(
+            os.path.join(os.path.dirname(__file__), 'images')
+        )
+        
+       
+        
+        # 初始化渲染器
+        self._renderer = TrainRenderer(debug_mode=True)
+        
+        # 初始化位置相关属性
+        self._current_row = 0  # 当前行号
+        self._vertical_target = 0  # 垂直目标位置
+        
+        # 加载图片资源
         try:
-            self.train_image = TrainImage()
+            self._load_images()
         except FileNotFoundError as e:
-            print(f"错误: {e}")
+            
             QApplication.quit()
             return
             
-        # 添加移动状态变量
-        self.is_moving_right = True
-        self.move_speed = train_config.MOVE_SPEED
-        self.vertical_step = train_config.VERTICAL_STEP
-        self.current_row = 0
-        self.is_moving_vertical = False
-        self.vertical_target = 0
-        self.debug_mode = True
-        # 车厢管理
-        self.carriage_count = train_config.DEFAULT_CARRIAGES
+        # 初始化组件
+        self._init_components()
         
-        # 计算窗口大小
-        head_size = self.train_image.get_scaled_size(self.train_image.head)
-        body_size = self.train_image.get_scaled_size(self.train_image.body)
-        tail_size = self.train_image.get_scaled_size(self.train_image.tail)
+        # 初始化状态（使用边框状态）
+        self._current_state: TrainState = BorderState(self)
         
-        # 计算总宽度：车头 + 车厢数 * 车厢宽度 + 车尾
-        total_width = head_size.width() + (self.carriage_count * body_size.width()) + tail_size.width()
-        # 使用最大高度作为窗口高度
-        total_height = max(head_size.height(), body_size.height(), tail_size.height())
+        # 初始化窗口
+        self._init_window()
         
-        print(f"窗口尺寸: {total_width}x{total_height}")
+        # 初始化动画
+        self._init_animation()
         
-        # 设置窗口大小
-        self.setFixedSize(total_width, total_height)
+    def _load_images(self):
+        """加载图片资源"""
+        # 加载完整图片
+        try:
+            self._full_image = self._image_loader.load_image('train_all.png')
+        except FileNotFoundError as e:
+           
+            raise
+            
+        # 只裁剪车头图片
+        try:
+            self._head_image = self._image_loader.crop_image(
+                self._full_image, train_config.HEAD_POS
+            )
+        except Exception as e:
+           
+            raise
+            
+    def _init_components(self):
+        """初始化列车组件"""
+        # 只创建车头组件
+        self._head = TrainComponent(
+            self._head_image,
+            QPoint(0, 0),  # 位置将由渲染器计算
+            train_config.SCALE_FACTOR
+        )
         
-        self.init_ui()
-        self.init_animation()
-        
-    def init_ui(self):
+    def _init_window(self):
+        """初始化窗口"""
         # 设置窗口属性
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |  # 无边框
@@ -91,146 +90,163 @@ class TrainPet(QWidget):
         
         # 获取屏幕尺寸
         screen = QApplication.primaryScreen().geometry()
-        self.screen_width = screen.width()
-        self.screen_height = screen.height()
+        self._screen_width = screen.width()
+        self._screen_height = screen.height()
         
-        # 初始位置（屏幕右下角）
-        self.move(self.screen_width - self.width() - 20, self.screen_height - self.height() - 20)
+        # 设置初始窗口大小（水平方向）
+        self.adjust_window_size(is_vertical=True)
         
-    def init_animation(self):
-        # 创建动画对象
-        self.animation = QPropertyAnimation(self, b"pos")
-        self.animation.setDuration(16)  # 约60FPS的更新频率
+        # 设置初始位置（屏幕右下角）
+        self.move(
+            self._screen_width - self.width() - train_config.WINDOW_MARGIN,
+            self._screen_height - self.height() - train_config.WINDOW_MARGIN
+        )
         
-        # 创建定时器用于更新位置
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_position)
-        self.timer.start(16)  # 约60FPS的更新频率
+    def adjust_window_size(self, is_vertical: bool):
+        """调整窗口大小
         
-    def update_position(self):
-        # 获取当前位置
-        current_pos = self.pos()
-        x = current_pos.x()
-        y = current_pos.y()
-        
-        # 如果正在垂直移动
-        if self.is_moving_vertical:
-            # 计算垂直移动
-            if y > self.vertical_target:
-                y -= self.move_speed
-                if y <= self.vertical_target:
-                    y = self.vertical_target
-                    self.is_moving_vertical = False
-            else:
-                y += self.move_speed
-                if y >= self.vertical_target:
-                    y = self.vertical_target
-                    self.is_moving_vertical = False
+        Args:
+            is_vertical: 是否垂直移动
+        """
+        # 获取图片原始尺寸
+        original_width = self._head_image.width()
+        original_height = self._head_image.height()
+
+        if original_width > original_height:
+            width = int(original_width * train_config.SCALE_FACTOR)
+            height = int(original_width * train_config.SCALE_FACTOR)
         else:
-            # 水平移动
-            if self.is_moving_right:
-                x += self.move_speed
-                # 检查是否到达右边界
-                if x >= self.screen_width - self.width():
-                    x = self.screen_width - self.width()
-                    self.is_moving_right = False
-                    # 开始垂直移动
-                    self.current_row += 1
-                    self.vertical_target = self.current_row * self.vertical_step
-                    # 检查是否需要重置到顶部
-                    if self.vertical_target >= self.screen_height - self.height():
-                        self.vertical_target = 0
-                        self.current_row = 0
-                    self.is_moving_vertical = True
-            else:
-                x -= self.move_speed
-                # 检查是否到达左边界
-                if x <= 0:
-                    x = 0
-                    self.is_moving_right = True
-                    # 开始垂直移动
-                    self.current_row += 1
-                    self.vertical_target = self.current_row * self.vertical_step
-                    # 检查是否需要重置到顶部
-                    if self.vertical_target >= self.screen_height - self.height():
-                        self.vertical_target = 0
-                        self.current_row = 0
-                    self.is_moving_vertical = True
+            width = int(original_height * train_config.SCALE_FACTOR)
+            height = int(original_height * train_config.SCALE_FACTOR)
+
+        # 记录当前位置
+        current_pos = self.pos()
         
-        # 设置新位置
-        new_pos = QPoint(x, y)
-        self.move(new_pos)
+        # 设置新的窗口大小
+        self.setFixedSize(width, height)
+        
+        # 保持窗口中心点不变 TODO:后面还需要调整
+        center_x = current_pos.x() + self.width() // 2
+        center_y = current_pos.y() + self.height() // 2
+        new_x = center_x - width // 2
+        new_y = center_y - height // 2
+        
+        # 移动到新位置
+        self.move(new_x, new_y)
+        
+    def _init_animation(self):
+        """初始化动画"""
+        # 创建定时器
+        self._timer = QTimer(self)
+        self._timer.timeout.connect(self._update)
+        self._timer.start(16)  # 约60FPS
+        
+    def _update(self):
+        """更新状态"""
+        # 更新位置
+        self._current_state.update_position()
+        
+        # 更新旋转角度
+        rotation_angle = self._current_state.get_rotation_angle()
+        if rotation_angle != self._head.rotation_angle:
+            old_angle = self._head.rotation_angle
+            self._head.rotation_angle = rotation_angle
+            
+            
+        # 强制重绘
+        self.update()
         
     def paintEvent(self, event):
+        """绘制事件"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # 计算各部分图片的缩放尺寸
-        head_size = self.train_image.get_scaled_size(self.train_image.head)
-        body_size = self.train_image.get_scaled_size(self.train_image.body)
-        tail_size = self.train_image.get_scaled_size(self.train_image.tail)
-        
-        # 计算垂直居中的偏移量
-        y_offset = (self.height() - max(head_size.height(), body_size.height(), tail_size.height())) // 2
-        
-        # 绘制车头
-        painter.drawPixmap(0, y_offset, head_size.width(), head_size.height(), self.train_image.head)
-        
-        # 绘制车厢
-        current_x = head_size.width()
-        for _ in range(self.carriage_count):
-            painter.drawPixmap(current_x, y_offset, body_size.width(), body_size.height(), self.train_image.body)
-            current_x += body_size.width()
+        try:
+            # 只渲染车头组件
+            components = [self._head]
             
-        # 绘制车尾
-        painter.drawPixmap(current_x, y_offset, tail_size.width(), tail_size.height(), self.train_image.tail)
-        
-        # 调试信息
-        if hasattr(self, 'debug_mode') and self.debug_mode:
-            painter.setPen(Qt.PenStyle.SolidLine)
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            # 绘制车头边界
-            painter.drawRect(0, y_offset, head_size.width(), head_size.height())
-            # 绘制车厢边界
-            current_x = head_size.width()
-            for _ in range(self.carriage_count):
-                painter.drawRect(current_x, y_offset, body_size.width(), body_size.height())
-                current_x += body_size.width()
-            # 绘制车尾边界
-            painter.drawRect(current_x, y_offset, tail_size.width(), tail_size.height())
-        
-    def add_carriage(self):
-        """增加一节车厢"""
-        if self.carriage_count < train_config.MAX_CARRIAGES:
-            self.carriage_count += 1
-            self.update()
+            # 计算旋转中心点
+            center_point = QPoint(self.width() / 2, self.height() / 2)
             
-    def remove_carriage(self):
-        """减少一节车厢"""
-        if self.carriage_count > train_config.MIN_CARRIAGES:
-            self.carriage_count -= 1
-            self.update()
+            # 渲染列车
+            self._renderer.render(
+                painter=painter,
+                components=components,
+                window_size=QSize(self.width(), self.height()),
+                scale_factor=train_config.SCALE_FACTOR,
+                rotation_angle=self._current_state.get_rotation_angle(),
+                center_point=center_point,
+                is_mirrored=self.is_moving_right  # 向右移动时进行镜像
+            )
             
+        finally:
+            # 确保画笔正确结束
+            painter.end()
+        
     def keyPressEvent(self, event: QKeyEvent):
-        if event.key() == Qt.Key.Key_Escape:
-            self.close()
-            QApplication.quit()
-        elif event.key() == Qt.Key.Key_Plus:  # 按+键增加车厢
-            self.add_carriage()
-        elif event.key() == Qt.Key.Key_Minus:  # 按-键减少车厢
-            self.remove_carriage()
+        """键盘按下事件"""
         super().keyPressEvent(event)
         
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent):
+        """鼠标按下事件"""
         if event.button() == Qt.MouseButton.LeftButton:
-            self.drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            self._drag_position = event.globalPosition().toPoint() - \
+                                 self.frameGeometry().topLeft()
             event.accept()
             
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent):
+        """鼠标移动事件"""
         if event.buttons() == Qt.MouseButton.LeftButton:
-            self.move(event.globalPosition().toPoint() - self.drag_position)
+            self.move(event.globalPosition().toPoint() - self._drag_position)
             event.accept()
             
-    def mouseDoubleClickEvent(self, event):
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        """鼠标双击事件"""
         if event.button() == Qt.MouseButton.LeftButton:
-            self.close() 
+            self.close()
+            
+    @property
+    def move_speed(self) -> int:
+        """获取移动速度"""
+        return train_config.MOVE_SPEED
+        
+    @property
+    def vertical_step(self) -> int:
+        """获取垂直步长"""
+        return train_config.VERTICAL_STEP
+        
+    @property
+    def screen_width(self) -> int:
+        """获取屏幕宽度"""
+        return self._screen_width
+        
+    @property
+    def screen_height(self) -> int:
+        """获取屏幕高度"""
+        return self._screen_height
+        
+    @property
+    def current_row(self) -> int:
+        """获取当前行"""
+        return self._current_row
+        
+    @current_row.setter
+    def current_row(self, value: int):
+        """设置当前行"""
+        self._current_row = value
+        
+    @property
+    def vertical_target(self) -> int:
+        """获取垂直目标位置"""
+        return self._vertical_target
+        
+    @vertical_target.setter
+    def vertical_target(self, value: int):
+        """设置垂直目标位置"""
+        self._vertical_target = value
+        
+    @property
+    def is_moving_right(self) -> bool:
+        """是否向右移动"""
+        # 使用当前状态的移动方向判断
+        return self._current_state.is_moving_right if hasattr(self._current_state, 'is_moving_right') else False 
