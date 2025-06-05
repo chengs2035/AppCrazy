@@ -2,6 +2,27 @@ import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 from PIL import Image, ImageTk
 import time
+import random
+import math
+
+class Particle:
+    def __init__(self, x, y, canvas):
+        self.x = x
+        self.y = y
+        self.canvas = canvas
+        self.size = random.randint(2, 5)
+        self.color = random.choice(['#FFD700', '#FFA500', '#FF4500', '#FF6347'])
+        self.speed = random.uniform(1, 3)
+        self.angle = random.uniform(0, 2 * math.pi)
+        self.life = random.randint(20, 40)
+        self.id = canvas.create_oval(x, y, x+self.size, y+self.size, fill=self.color)
+
+    def update(self):
+        self.x += math.cos(self.angle) * self.speed
+        self.y += math.sin(self.angle) * self.speed
+        self.life -= 1
+        self.canvas.coords(self.id, self.x, self.y, self.x+self.size, self.y+self.size)
+        return self.life > 0
 
 class FootballPredictorApp:
     def __init__(self, root):
@@ -15,18 +36,22 @@ class FootballPredictorApp:
         except Exception as e:
             print(f"无法加载程序图标: {e}")
         
+        # 创建画布用于特效
+        self.canvas = tk.Canvas(root, highlightthickness=0)
+        self.canvas.place(x=0, y=0, relwidth=1, relheight=1)
+        
         # 加载背景图片
         try:
             self.bg_image = Image.open("JiangsuFootballPredictor/resources/background.jpg")
             self.bg_photo = ImageTk.PhotoImage(self.bg_image)
-            self.bg_label = tk.Label(root, image=self.bg_photo)
+            self.bg_label = tk.Label(self.canvas, image=self.bg_photo)
             self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
         except Exception as e:
             print(f"无法加载背景图片: {e}")
             self.bg_label = None
         
         # 创建半透明背景框
-        self.frame = tk.Frame(root, bg='white')
+        self.frame = tk.Frame(self.canvas, bg='white')
         self.frame.place(relx=0.5, rely=0.5, anchor='center', width=400, height=300)
         
         # 设置半透明效果
@@ -140,6 +165,38 @@ class FootballPredictorApp:
 
         self.city = None
         self.state = 'input'  # 状态: input(等待输入) 或 predict(等待预测)
+        self.particles = []
+        self.is_celebrating = False
+
+    def create_particles(self, x, y):
+        for _ in range(20):
+            self.particles.append(Particle(x, y, self.canvas))
+
+    def update_particles(self):
+        if not self.particles:
+            return
+        
+        self.particles = [p for p in self.particles if p.update()]
+        if self.particles:
+            self.root.after(50, self.update_particles)
+        else:
+            self.is_celebrating = False
+
+    def flash_text(self, label, colors, index=0):
+        if not self.is_celebrating:
+            return
+        label.config(fg=colors[index])
+        next_index = (index + 1) % len(colors)
+        self.root.after(200, lambda: self.flash_text(label, colors, next_index))
+
+    def celebrate_result(self):
+        self.is_celebrating = True
+        # 创建粒子效果
+        self.create_particles(400, 300)
+        self.update_particles()
+        # 文字闪烁效果
+        colors = ['#FFD700', '#FFA500', '#FF4500', '#FF6347', '#FF8C00']
+        self.flash_text(self.result_label, colors)
 
     def animate_text(self, text):
         self.result_label.config(text="")
@@ -147,6 +204,8 @@ class FootballPredictorApp:
             self.result_label.config(text=self.result_label.cget("text") + char)
             self.root.update()
             time.sleep(0.05)
+        # 显示完文字后开始庆祝效果
+        self.celebrate_result()
 
     def ai_thinking(self, city, step=0):
         if step == 0:
@@ -190,6 +249,8 @@ class FootballPredictorApp:
         self.predict_button.config(text="请填写所在地", state='normal')
         self.state = 'input'
         self.city = None
+        self.is_celebrating = False
+        self.result_label.config(fg='#d2691e')
 
 if __name__ == "__main__":
     root = tk.Tk()
