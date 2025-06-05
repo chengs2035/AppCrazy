@@ -142,7 +142,7 @@ class MainWindow:
             self.screen.fill(WHITE)
         
         # 绘制标题
-        title = self.font.render("狗狗叫模拟器", True, BLACK)
+        title = self.font.render("你不要Dog叫", True, BLACK)
         title_rect = title.get_rect(center=(WINDOW_WIDTH // 2, 50))
         self.screen.blit(title, title_rect)
         
