@@ -8,7 +8,7 @@ import os
 class StudentEncouragementApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("赛博佛祖加油站V1.0")
+        self.root.title("妈祖保佑加油站V1.0")
         self.root.geometry("600x400")
         self.root.iconbitmap("StudentEncouragement/resources/app.ico")
         # 获取屏幕尺寸
@@ -16,36 +16,60 @@ class StudentEncouragementApp:
         self.screen_height = self.root.winfo_screenheight()
         
         # 设置窗口样式
-        self.root.configure(bg='#FFD700')  # 金色背景
+        self.root.configure(bg='#87CEEB')  # 更柔和的浅蓝色
+        self.root.attributes('-alpha', 0.9)  # 设置窗口透明度
         
         # 创建主框架
-        self.main_frame = tk.Frame(self.root, bg='#FFD700')
+        self.main_frame = tk.Frame(self.root, bg='#87CEEB')
         self.main_frame.pack(expand=True, fill='both', padx=20, pady=20)
         
         # 创建标题标签
         self.title_label = tk.Label(
             self.main_frame,
-            text="阿弥陀佛，善哉善哉",
-            font=('微软雅黑', 24, 'bold'),
-            bg='#FFD700',
-            fg='#8B0000'  # 深红色文字
+            text="妈祖保佑，平安顺遂",
+            font=('华文行楷', 24, 'bold'),
+            bg='#87CEEB',  # 更柔和的浅蓝色
+            fg='white'
         )
         self.title_label.pack(pady=20)
         
+        # 创建按钮容器框架
+        self.button_frame = tk.Frame(self.main_frame, bg='#87CEEB')
+        self.button_frame.pack(pady=20)
+        
+        # 加载妈祖图片
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            resources_dir = os.path.join(os.path.dirname(current_dir), 'resources')
+            image_path = os.path.join(resources_dir, 'safer.png')
+            self.mazu_image = tk.PhotoImage(file=image_path)
+            # 调整图片大小
+            self.mazu_image = self.mazu_image.subsample(2, 2)  # 缩小到原来的一半
+        except Exception as e:
+            print(f"加载图片失败: {e}")
+            self.mazu_image = None
+        
+        # 创建图片标签
+        if self.mazu_image:
+            self.image_label = tk.Label(
+                self.button_frame,
+                image=self.mazu_image,
+                bg='#87CEEB'
+            )
+            self.image_label.pack(side=tk.LEFT, padx=10)
+        
         # 创建加油按钮
         self.cheer_button = tk.Button(
-            self.main_frame,
-            text="点击获得佛祖加持",
+            self.button_frame,
+            text="点击获得妈祖保佑",
             command=self.start_encouragement,
-            font=('微软雅黑', 16),
-            bg='#8B0000',  # 深红色按钮
-            fg='#FFD700',  # 金色文字
-            width=15,
-            height=2,
-            relief='raised',
-            cursor='hand2'
+            font=('华文行楷', 16),
+            bg='#FF0000',  # 保持红色
+            fg='white',
+            relief=tk.RAISED,
+            borderwidth=3
         )
-        self.cheer_button.pack(pady=20)
+        self.cheer_button.pack(side=tk.LEFT, padx=10)
         
         # 创建进度条
         self.progress = ttk.Progressbar(
@@ -61,11 +85,11 @@ class StudentEncouragementApp:
         self.progress_label = tk.Label(
             self.main_frame,
             text="",
-            font=('微软雅黑', 12),
-            bg='#FFD700',
-            fg='#8B0000'
+            font=('华文行楷', 12),
+            bg='#87CEEB',  # 更柔和的浅蓝色
+            fg='white'
         )
-        self.progress_label.pack(pady=5)
+        self.progress_label.pack(pady=10)
         self.progress_label.pack_forget()
         
         # 加载鼓励语
@@ -84,24 +108,38 @@ class StudentEncouragementApp:
         self.grid_rows = self.screen_height // self.grid_size
         self.used_positions = set()  # 记录已使用的位置
         
-        # 禅意颜色组合
+        # 更新颜色组合
         self.color_combinations = [
-            # 金色系
-            {'bg': '#FFD700', 'fg': '#8B0000'},  # 金色配深红
-            {'bg': '#FFA500', 'fg': '#8B0000'},  # 橙色配深红
-            {'bg': '#FFC0CB', 'fg': '#8B0000'},  # 粉色配深红
-            # 红色系
-            {'bg': '#FF0000', 'fg': '#FFD700'},  # 红色配金色
-            {'bg': '#8B0000', 'fg': '#FFD700'},  # 深红配金色
-            {'bg': '#CD5C5C', 'fg': '#FFD700'},  # 印度红配金色
-            # 白色系
-            {'bg': '#FFFFFF', 'fg': '#8B0000'},  # 白色配深红
-            {'bg': '#F5F5F5', 'fg': '#8B0000'},  # 淡灰配深红
-            {'bg': '#FFFAFA', 'fg': '#8B0000'},  # 雪白配深红
-            # 暖色系
-            {'bg': '#FFE4E1', 'fg': '#8B0000'},  # 淡粉配深红
-            {'bg': '#FFF0F5', 'fg': '#8B0000'},  # 淡紫红配深红
-            {'bg': '#FFEFD5', 'fg': '#8B4513'},  # 淡黄配棕色
+            # 背景色和文字色组合
+            ('#E6F3FF', '#8B0000'),  # 浅蓝色背景配深红色文字
+            ('#F0F8FF', '#006400'),  # 爱丽丝蓝背景配深绿色文字
+            ('#F5F5F5', '#4B0082'),  # 白色背景配靛蓝色文字
+            ('#FFF0F5', '#8B4513'),  # 淡粉色背景配棕色文字
+            ('#F0FFF0', '#800080'),  # 蜜瓜绿背景配紫色文字
+            ('#FFFACD', '#000080'),  # 柠檬黄背景配深蓝色文字
+            ('#F5F5DC', '#8B008B'),  # 米色背景配深紫色文字
+            ('#E0FFFF', '#8B0000'),  # 淡青色背景配深红色文字
+            ('#FFE4E1', '#006400'),  # 淡红色背景配深绿色文字
+            ('#F0F8FF', '#8B4513'),  # 爱丽丝蓝背景配棕色文字
+            ('#FFF0F5', '#4B0082'),  # 淡粉色背景配靛蓝色文字
+            ('#F0FFF0', '#8B0000'),  # 蜜瓜绿背景配深红色文字
+            ('#FFFACD', '#800080'),  # 柠檬黄背景配紫色文字
+            ('#F5F5DC', '#000080'),  # 米色背景配深蓝色文字
+            ('#E0FFFF', '#8B008B')   # 淡青色背景配深紫色文字
+        ]
+
+        # 随机文字颜色
+        self.text_colors = [
+            '#8B0000',  # 深红色
+            '#006400',  # 深绿色
+            '#4B0082',  # 靛蓝色
+            '#8B4513',  # 棕色
+            '#800080',  # 紫色
+            '#000080',  # 深蓝色
+            '#8B008B',  # 深紫色
+            '#8B0000',  # 深红色
+            '#006400',  # 深绿色
+            '#4B0082'   # 靛蓝色
         ]
 
     def get_random_position(self):
@@ -145,7 +183,7 @@ class StudentEncouragementApp:
         self.is_running = True
         self.cheer_button.config(state='disabled')
         self.progress.pack(pady=10)
-        self.progress_label.pack(pady=5)
+        self.progress_label.pack(pady=10)
         
         # 清空队列和窗口列表
         self.encouragement_queue.clear()
@@ -190,17 +228,19 @@ class StudentEncouragementApp:
         
         # 随机选择颜色组合
         colors = random.choice(self.color_combinations)
+        # 随机选择文字颜色
+        text_color = random.choice(self.text_colors)
         
         # 设置窗口样式
-        window.configure(bg=colors['bg'])
+        window.configure(bg=colors[0])
         
         # 创建标签
         label = tk.Label(
             window,
-            text=f"阿弥陀佛\n{self.encouragement_queue.popleft()}",
-            font=('微软雅黑', 12, 'bold'),
-            bg=colors['bg'],
-            fg=colors['fg'],
+            text=f"妈祖保佑\n{self.encouragement_queue.popleft()}",
+            font=('华文行楷', 13, 'bold'),
+            bg=colors[0],
+            fg=text_color,  # 使用随机文字颜色
             padx=20,
             pady=10
         )
