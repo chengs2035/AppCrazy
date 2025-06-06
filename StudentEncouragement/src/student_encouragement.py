@@ -8,38 +8,38 @@ import os
 class StudentEncouragementApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("考生加油站")
+        self.root.title("赛博佛祖加油站V1.0")
         self.root.geometry("600x400")
-        
+        self.root.iconbitmap("StudentEncouragement/resources/app.ico")
         # 获取屏幕尺寸
         self.screen_width = self.root.winfo_screenwidth()
         self.screen_height = self.root.winfo_screenheight()
         
         # 设置窗口样式
-        self.root.configure(bg='#f0f0f0')
+        self.root.configure(bg='#FFD700')  # 金色背景
         
         # 创建主框架
-        self.main_frame = tk.Frame(self.root, bg='#f0f0f0')
+        self.main_frame = tk.Frame(self.root, bg='#FFD700')
         self.main_frame.pack(expand=True, fill='both', padx=20, pady=20)
         
         # 创建标题标签
         self.title_label = tk.Label(
             self.main_frame,
-            text="为考生加油！",
+            text="阿弥陀佛，善哉善哉",
             font=('微软雅黑', 24, 'bold'),
-            bg='#f0f0f0',
-            fg='#2c3e50'
+            bg='#FFD700',
+            fg='#8B0000'  # 深红色文字
         )
         self.title_label.pack(pady=20)
         
         # 创建加油按钮
         self.cheer_button = tk.Button(
             self.main_frame,
-            text="点击加油！",
+            text="点击获得佛祖加持",
             command=self.start_encouragement,
             font=('微软雅黑', 16),
-            bg='#3498db',
-            fg='white',
+            bg='#8B0000',  # 深红色按钮
+            fg='#FFD700',  # 金色文字
             width=15,
             height=2,
             relief='raised',
@@ -62,8 +62,8 @@ class StudentEncouragementApp:
             self.main_frame,
             text="",
             font=('微软雅黑', 12),
-            bg='#f0f0f0',
-            fg='#2c3e50'
+            bg='#FFD700',
+            fg='#8B0000'
         )
         self.progress_label.pack(pady=5)
         self.progress_label.pack_forget()
@@ -84,26 +84,24 @@ class StudentEncouragementApp:
         self.grid_rows = self.screen_height // self.grid_size
         self.used_positions = set()  # 记录已使用的位置
         
-        # 温暖的颜色组合
+        # 禅意颜色组合
         self.color_combinations = [
-            # 暖色调组合
-            {'bg': '#FFB6C1', 'fg': '#8B0000'},  # 浅粉红配深红
-            {'bg': '#FFA07A', 'fg': '#8B0000'},  # 浅橙配深红
+            # 金色系
             {'bg': '#FFD700', 'fg': '#8B0000'},  # 金色配深红
-            {'bg': '#FFE4B5', 'fg': '#8B0000'},  # 浅黄配深红
+            {'bg': '#FFA500', 'fg': '#8B0000'},  # 橙色配深红
             {'bg': '#FFC0CB', 'fg': '#8B0000'},  # 粉色配深红
-            # 活力色调组合
-            {'bg': '#98FB98', 'fg': '#006400'},  # 浅绿配深绿
-            {'bg': '#87CEEB', 'fg': '#000080'},  # 天蓝配深蓝
-            {'bg': '#DDA0DD', 'fg': '#4B0082'},  # 梅红配靛蓝
-            {'bg': '#F0E68C', 'fg': '#8B4513'},  # 卡其配棕色
-            {'bg': '#E6E6FA', 'fg': '#4B0082'},  # 淡紫配靛蓝
-            # 温暖渐变组合
+            # 红色系
+            {'bg': '#FF0000', 'fg': '#FFD700'},  # 红色配金色
+            {'bg': '#8B0000', 'fg': '#FFD700'},  # 深红配金色
+            {'bg': '#CD5C5C', 'fg': '#FFD700'},  # 印度红配金色
+            # 白色系
+            {'bg': '#FFFFFF', 'fg': '#8B0000'},  # 白色配深红
+            {'bg': '#F5F5F5', 'fg': '#8B0000'},  # 淡灰配深红
+            {'bg': '#FFFAFA', 'fg': '#8B0000'},  # 雪白配深红
+            # 暖色系
             {'bg': '#FFE4E1', 'fg': '#8B0000'},  # 淡粉配深红
             {'bg': '#FFF0F5', 'fg': '#8B0000'},  # 淡紫红配深红
             {'bg': '#FFEFD5', 'fg': '#8B4513'},  # 淡黄配棕色
-            {'bg': '#F0FFF0', 'fg': '#006400'},  # 淡绿配深绿
-            {'bg': '#F0F8FF', 'fg': '#000080'},  # 淡蓝配深蓝
         ]
 
     def get_random_position(self):
@@ -199,8 +197,8 @@ class StudentEncouragementApp:
         # 创建标签
         label = tk.Label(
             window,
-            text=self.encouragement_queue.popleft(),
-            font=('微软雅黑', 12, 'bold'),  # 加粗字体
+            text=f"阿弥陀佛\n{self.encouragement_queue.popleft()}",
+            font=('微软雅黑', 12, 'bold'),
             bg=colors['bg'],
             fg=colors['fg'],
             padx=20,
