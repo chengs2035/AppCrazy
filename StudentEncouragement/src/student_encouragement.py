@@ -6,30 +6,41 @@ from collections import deque
 import time
 
 class PopupWindow:
-    def __init__(self, text, x, y, bg_color, text_color, font, is_vertical=False):
+    def __init__(self, text, x, y, bg_color, text_color, font, display_mode=0):
         self.text = text
         self.x = x
         self.y = y
         self.bg_color = bg_color
         self.text_color = text_color
         self.font = font
-        self.alpha = 100
-        self.fade_speed = 5 # 设置为每秒5帧
+        self.alpha = 150  # 提高初始透明度
+        self.fade_speed = 15  # 加快淡入淡出速度
         self.life_time = 0
-        self.max_life_time = 200  # 显示时间（帧数）
-        self.is_vertical = is_vertical
+        self.max_life_time = 100  # 减少显示时间
+        self.display_mode = display_mode  # 0: 横向, 1: 竖向, 2: 45度角
         
         # 计算窗口大小
-        if self.is_vertical:
+        if self.display_mode == 1:  # 竖向
             # 竖向文字，每个字符单独渲染
             char_height = self.font.get_height()
-            self.width = char_height + 40
-            self.height = len(text) * char_height + 40
-        else:
+            self.width = char_height + 40  # 增大内边距
+            self.height = len(text) * char_height + 40  # 增大内边距
+        elif self.display_mode == 2:  # 45度角
+            # 45度角文字
+            text_surface = self.font.render(text, True, (0, 0, 0))
+            # 使用更紧凑的尺寸计算
+            text_width = text_surface.get_width()
+            text_height = text_surface.get_height()
+            # 计算旋转后的实际占用空间
+            rotated_width = int((text_width + text_height) * 0.707)  # cos(45°) ≈ 0.707
+            rotated_height = int((text_width + text_height) * 0.707)
+            self.width = rotated_width + 40  # 增大边距
+            self.height = rotated_height + 40
+        else:  # 横向
             # 横向文字
             text_surface = self.font.render(text, True, (0, 0, 0))
-            self.width = text_surface.get_width() + 40
-            self.height = text_surface.get_height() + 40
+            self.width = text_surface.get_width() + 40  # 增大内边距
+            self.height = text_surface.get_height() + 40  # 增大内边距
         
         # 创建窗口表面
         self.surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
@@ -59,7 +70,7 @@ class PopupWindow:
         pygame.draw.rect(self.surface, (*self.bg_color, self.alpha), (0, 0, self.width, self.height), border_radius=10)
         pygame.draw.rect(self.surface, (*self.text_color, self.alpha), (0, 0, self.width, self.height), 2, border_radius=10)
         
-        if self.is_vertical:
+        if self.display_mode == 1:  # 竖向
             # 竖向渲染文字
             char_height = self.font.get_height()
             for i, char in enumerate(self.text):
@@ -67,7 +78,19 @@ class PopupWindow:
                 char_surface.set_alpha(self.alpha)
                 char_rect = char_surface.get_rect(center=(self.width // 2, 20 + i * char_height))
                 self.surface.blit(char_surface, char_rect)
-        else:
+        elif self.display_mode == 2:  # 45度角
+            # 渲染文字
+            text_surface = self.font.render(self.text, True, self.text_color)
+            text_surface.set_alpha(self.alpha)
+            # 旋转文字
+            rotated_text = pygame.transform.rotate(text_surface, 45)
+            # 计算居中位置，考虑旋转后的偏移
+            text_rect = rotated_text.get_rect(center=(self.width // 2, self.height // 2))
+            # 微调位置以确保文字完全居中
+            text_rect.x += (self.width - rotated_text.get_width()) // 2
+            text_rect.y += (self.height - rotated_text.get_height()) // 2
+            self.surface.blit(rotated_text, text_rect)
+        else:  # 横向
             # 横向渲染文字
             text_surface = self.font.render(self.text, True, self.text_color)
             text_surface.set_alpha(self.alpha)
@@ -104,7 +127,7 @@ class Button:
 class StudentEncouragementApp:
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption("妈祖保佑加油站V1.0")
+        pygame.display.set_caption("妈祖保佑，高考加油")
         
         # 获取屏幕信息
         self.screen_info = pygame.display.Info()
@@ -113,6 +136,70 @@ class StudentEncouragementApp:
         
         # 设置全屏窗口
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
+        
+        # 加载字体
+        self.font = pygame.font.Font(None, 48)  # 增大字体
+        self.popup_font = pygame.font.Font(None, 32)  # 增大弹出窗口字体
+        
+        # 设置颜色
+        self.bg_color = (240, 248, 255)  # 淡蓝色背景
+        self.button_color = (100, 149, 237)  # 淡蓝色按钮
+        self.button_hover_color = (65, 105, 225)  # 深蓝色悬停
+        self.text_color = (25, 25, 112)  # 深蓝色文字
+        
+        # 设置按钮
+        button_width = 400  # 增大按钮宽度
+        button_height = 100  # 增大按钮高度
+        self.start_button = pygame.Rect(
+            (self.screen_width - button_width) // 2,
+            self.screen_height // 2,
+            button_width,
+            button_height
+        )
+        
+        # 设置进度条
+        self.progress = 0
+        progress_width = int(self.screen_width * 0.8)
+        progress_x = (self.screen_width - progress_width) // 2
+        self.progress_bar = pygame.Rect(progress_x, self.screen_height - 100, progress_width, 40)  # 增大进度条尺寸
+        
+        # 设置弹出窗口
+        self.popup_windows = []
+        self.current_window = 0
+        self.total_windows = 5000
+        self.windows_per_frame = 5
+        self.is_running = False
+        
+        # 设置鼓励语
+        self.encouragements = [
+            "加油！", "你是最棒的！", "继续努力！", "相信自己！",
+            "坚持就是胜利！", "不要放弃！", "你一定能行！", "保持专注！",
+            "向前冲！", "永不放弃！", "追求卓越！", "超越自我！",
+            "勇往直前！", "创造奇迹！", "突破极限！", "追求梦想！"
+        ]
+        
+        # 设置颜色
+        self.bg_colors = [
+            (255, 182, 193),  # 浅粉色
+            (173, 216, 230),  # 浅蓝色
+            (144, 238, 144),  # 浅绿色
+            (255, 218, 185),  # 浅橙色
+            (221, 160, 221),  # 浅紫色
+            (255, 228, 196),  # 浅黄色
+            (176, 224, 230),  # 浅青色
+            (255, 192, 203)   # 浅红色
+        ]
+        
+        self.text_colors = [
+            (25, 25, 112),    # 深蓝色
+            (85, 107, 47),    # 深绿色
+            (139, 69, 19),    # 深棕色
+            (72, 61, 139),    # 深紫色
+            (128, 0, 0),      # 深红色
+            (0, 100, 0),      # 深绿色
+            (47, 79, 79),     # 深青色
+            (85, 26, 139)     # 深紫色
+        ]
         
         # 加载资源
         self.load_resources()
@@ -123,14 +210,15 @@ class StudentEncouragementApp:
         self.popup_windows = []
         self.is_running = False
         self.progress = 0
-        self.total_windows = 2000
+        self.total_windows = 5000  # 增加总窗口数量
         self.current_window = 0
+        self.windows_per_frame = 5  # 每帧生成的窗口数量
         
         # 创建按钮
         button_font = pygame.font.Font("simhei.ttf", 24)
         self.button = Button(
-            self.screen_width // 2 - 150,  # 调整按钮位置
-            self.screen_height // 2,
+            self.screen.get_width() // 2 - 150,
+            self.screen.get_height() // 2,
             300, 50,
             "立刻马上让妈祖给你加油！",
             button_font,
@@ -145,32 +233,8 @@ class StudentEncouragementApp:
         self.subtitle_font = pygame.font.Font("simhei.ttf", 48)
         
         # 创建弹出框字体
-        self.popup_font = pygame.font.Font("simhei.ttf", 20)
+        self.popup_font = pygame.font.Font("simhei.ttf", 16)  # 减小字体大小
         
-        # 背景颜色组合
-        self.bg_colors = [
-            (230, 243, 255),  # 浅蓝色
-            (240, 248, 255),  # 爱丽丝蓝
-            (245, 245, 245),  # 白色
-            (255, 240, 245),  # 淡粉色
-            (240, 255, 240),  # 蜜瓜绿
-            (255, 250, 205),  # 柠檬黄
-            (245, 245, 220),  # 米色
-            (224, 255, 255),  # 淡青色
-            (255, 228, 225),  # 淡红色
-        ]
-        
-        # 文字颜色组合
-        self.text_colors = [
-            (139, 0, 0),    # 深红色
-            (0, 100, 0),    # 深绿色
-            (75, 0, 130),   # 靛蓝色
-            (139, 69, 19),  # 棕色
-            (128, 0, 128),  # 紫色
-            (0, 0, 128),    # 深蓝色
-            (139, 0, 139),  # 深紫色
-        ]
-
     def load_resources(self):
         try:
             current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -199,24 +263,45 @@ class StudentEncouragementApp:
             self.current_window = 0
             self.popup_windows.clear()
 
+    def get_random_position(self):
+        # 计算网格大小
+        grid_size = 150  # 增大网格大小以适应全屏
+        # 计算可用的网格数量
+        cols = (self.screen_width - 1) // grid_size
+        rows = (self.screen_height - 2) // grid_size
+        
+        # 随机选择一个网格
+        col = random.randint(0, cols - 1)
+        row = random.randint(0, rows - 1)
+        
+        # 在网格内随机位置
+        x =   col * grid_size + random.randint(10, grid_size - 10)
+        y =   row * grid_size + random.randint(10, grid_size - 10)
+        
+        return x, y
+
     def update(self):
         if self.is_running and self.current_window < self.total_windows:
-            # 创建新的弹出窗口
-            text = f"{random.choice(self.encouragements)}"
-            x = random.randint(0, self.screen_width - 200)
-            y = random.randint(0, self.screen_height - 100)
-            bg_color = random.choice(self.bg_colors)
-            text_color = random.choice(self.text_colors)
-            
-            # 随机选择文字方向
-            is_vertical = random.choice([True, False])
-            
-            self.popup_windows.append(
-                PopupWindow(text, x, y, bg_color, text_color, self.popup_font, is_vertical)
-            )
-            
-            self.current_window += 1
-            self.progress = (self.current_window / self.total_windows) * 100
+            # 每帧创建多个窗口
+            for _ in range(self.windows_per_frame):
+                if self.current_window >= self.total_windows:
+                    break
+                    
+                # 创建新的弹出窗口
+                text = f"{random.choice(self.encouragements)}"
+                x, y = self.get_random_position()
+                bg_color = random.choice(self.bg_colors)
+                text_color = random.choice(self.text_colors)
+                
+                # 随机选择显示模式 (0: 横向, 1: 竖向, 2: 45度角)
+                display_mode = random.randint(0, 1)
+                
+                self.popup_windows.append(
+                    PopupWindow(text, x, y, bg_color, text_color, self.popup_font, display_mode)
+                )
+                
+                self.current_window += 1
+                self.progress = (self.current_window / self.total_windows) * 100
             
             if self.current_window >= self.total_windows:
                 self.is_running = False
@@ -226,11 +311,12 @@ class StudentEncouragementApp:
 
     def draw(self):
         # 绘制背景
-        self.screen.fill((135, 206, 235))  # 浅蓝色背景
+        self.screen.fill(self.bg_color)
         
         # 绘制标题
-        title_surface = self.title_font.render("妈祖保佑，高考加油", True, (255, 255, 255))
-        title_rect = title_surface.get_rect(center=(self.screen_width // 2, 50))
+        
+        title_surface = self.title_font.render("妈祖保佑，高考加油", True, self.text_color)
+        title_rect = title_surface.get_rect(center=(self.screen_width // 2, 100))
         self.screen.blit(title_surface, title_rect)
         
         # 绘制妈祖图片
@@ -254,22 +340,24 @@ class StudentEncouragementApp:
         
         # 绘制进度条
         if self.is_running:
-            progress_width = int(self.screen_width * 0.8)
-            progress_x = (self.screen_width - progress_width) // 2
-            pygame.draw.rect(self.screen, (200, 200, 200), (progress_x, self.screen_height - 50, progress_width, 20))
-            current_progress = int(progress_width * (self.progress / 100))
-            pygame.draw.rect(self.screen, (0, 255, 0), (progress_x, self.screen_height - 50, current_progress, 20))
+            # 绘制进度条背景
+            pygame.draw.rect(self.screen, (200, 200, 200), self.progress_bar, border_radius=10)
+            # 绘制进度条填充
+            current_progress = int(self.progress_bar.width * (self.progress / 100))
+            progress_fill = pygame.Rect(self.progress_bar.x, self.progress_bar.y, current_progress, self.progress_bar.height)
+            pygame.draw.rect(self.screen, (0, 255, 0), progress_fill, border_radius=10)
             
             # 绘制进度文本
             progress_text = f"已加油: {self.current_window}/{self.total_windows}"
-            progress_surface = self.popup_font.render(progress_text, True, (0, 0, 0))
-            progress_rect = progress_surface.get_rect(center=(self.screen_width // 2, self.screen_height - 80))
+            progress_surface = self.popup_font.render(progress_text, True, self.text_color)
+            progress_rect = progress_surface.get_rect(center=(self.screen_width // 2, self.screen_height - 150))
             self.screen.blit(progress_surface, progress_rect)
         
         # 绘制所有弹出窗口
         for window in self.popup_windows:
             window.draw(self.screen)
         
+        # 更新显示
         pygame.display.flip()
 
     def run(self):
