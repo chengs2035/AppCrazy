@@ -138,8 +138,8 @@ class StudentEncouragementApp:
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
         
         # 加载字体
-        self.font = pygame.font.Font(None, 48)  # 增大字体
-        self.popup_font = pygame.font.Font(None, 32)  # 增大弹出窗口字体
+        self.font = pygame.font.Font(None, 68)  # 增大字体
+        self.popup_font = pygame.font.Font(None, 52)  # 增大弹出窗口字体
         
         # 设置颜色
         self.bg_color = (240, 248, 255)  # 淡蓝色背景
@@ -227,10 +227,10 @@ class StudentEncouragementApp:
         )
         
         # 创建标题字体
-        self.title_font = pygame.font.Font("simhei.ttf", 36)
+        self.title_font = pygame.font.Font("simhei.ttf", 80)
         
         # 创建副标题字体（更大的字体）
-        self.subtitle_font = pygame.font.Font("simhei.ttf", 48)
+        self.subtitle_font = pygame.font.Font("simhei.ttf", 80)
         
         # 创建弹出框字体
         self.popup_font = pygame.font.Font("simhei.ttf", 16)  # 减小字体大小
@@ -330,12 +330,12 @@ class StudentEncouragementApp:
         subtitle_text = "一起为高考生加油吧！"
         # 创建文字阴影
         shadow_surface = self.subtitle_font.render(subtitle_text, True, (0, 0, 0))
-        shadow_rect = shadow_surface.get_rect(center=(self.screen_width // 2 + 2, self.screen_height // 2 + 80))
+        shadow_rect = shadow_surface.get_rect(center=(self.screen_width // 2 + 2, self.screen_height // 2 + 100))
         self.screen.blit(shadow_surface, shadow_rect)
         
         # 绘制主文字
         subtitle_surface = self.subtitle_font.render(subtitle_text, True, (255, 215, 0))  # 金色
-        subtitle_rect = subtitle_surface.get_rect(center=(self.screen_width // 2, self.screen_height // 2 + 78))
+        subtitle_rect = subtitle_surface.get_rect(center=(self.screen_width // 2, self.screen_height // 2 + 98))
         self.screen.blit(subtitle_surface, subtitle_rect)
         
         # 绘制进度条
