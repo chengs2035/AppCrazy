@@ -6,55 +6,86 @@ from collections import deque
 import time
 
 class PopupWindow:
-    def __init__(self, text, x, y, bg_color, text_color, font, display_mode=0):
+    def __init__(self, text, x, y, bg_color, text_color, font, display_mode=0, move_speed=0):
         self.text = text
         self.x = x
         self.y = y
         self.bg_color = bg_color
         self.text_color = text_color
-        self.font = font
+        self.display_mode = display_mode  # 0: 横向, 1: 竖向, 2: 45度角
+        self.move_speed = move_speed  # 移动速度，0表示不移动
+        
+        # 随机字体大小（基础大小52px ± 10px）
+        self.font_size = random.randint(42, 62)
+        self.font = pygame.font.Font("simhei.ttf", self.font_size)
+        
         self.alpha = 150  # 提高初始透明度
         self.fade_speed = 15  # 加快淡入淡出速度
         self.life_time = 0
-        self.max_life_time = 100  # 减少显示时间
-        self.display_mode = display_mode  # 0: 横向, 1: 竖向, 2: 45度角
+        self.max_life_time = 50  # 减少显示时间
+        self.is_moving = move_speed > 0  # 标记是否为移动弹窗
+        
+        # 预渲染文字表面
+        self.text_surface = self.font.render(text, True, (0, 0, 0))
         
         # 计算窗口大小
         if self.display_mode == 1:  # 竖向
             # 竖向文字，每个字符单独渲染
             char_height = self.font.get_height()
-            self.width = char_height + 40  # 增大内边距
-            self.height = len(text) * char_height + 40  # 增大内边距
+            base_width = char_height + 40
+            base_height = len(text) * char_height + 40
+            # 随机调整窗口大小（±10px）
+            self.width = base_width + random.randint(-10, 10)
+            self.height = base_height + random.randint(-10, 10)
         elif self.display_mode == 2:  # 45度角
-            # 45度角文字
-            text_surface = self.font.render(text, True, (0, 0, 0))
-            # 使用更紧凑的尺寸计算
-            text_width = text_surface.get_width()
-            text_height = text_surface.get_height()
+            # 使用预渲染的文字表面
+            text_width = self.text_surface.get_width()
+            text_height = self.text_surface.get_height()
             # 计算旋转后的实际占用空间
             rotated_width = int((text_width + text_height) * 0.707)  # cos(45°) ≈ 0.707
             rotated_height = int((text_width + text_height) * 0.707)
-            self.width = rotated_width + 40  # 增大边距
-            self.height = rotated_height + 40
+            base_width = rotated_width + 40
+            base_height = rotated_height + 40
+            # 随机调整窗口大小（±10px）
+            self.width = base_width + random.randint(-10, 10)
+            self.height = base_height + random.randint(-10, 10)
         else:  # 横向
-            # 横向文字
-            text_surface = self.font.render(text, True, (0, 0, 0))
-            self.width = text_surface.get_width() + 40  # 增大内边距
-            self.height = text_surface.get_height() + 40  # 增大内边距
+            # 使用预渲染的文字表面
+            base_width = self.text_surface.get_width() + 40
+            base_height = self.text_surface.get_height() + 40
+            # 随机调整窗口大小（±10px）
+            self.width = base_width + random.randint(-10, 10)
+            self.height = base_height + random.randint(-10, 10)
         
         # 创建窗口表面
         self.surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         
+        # 预渲染窗口背景
+        self.bg_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        pygame.draw.rect(self.bg_surface, (*self.bg_color, 255), (0, 0, self.width, self.height), border_radius=10)
+        pygame.draw.rect(self.bg_surface, (*self.text_color, 255), (0, 0, self.width, self.height), 2, border_radius=10)
+        
     def update(self):
-        if self.life_time < self.max_life_time:
-            if self.alpha < 255:
-                self.alpha += self.fade_speed
-            self.life_time += 1
-        else:
-            if self.alpha > 0:
-                self.alpha -= self.fade_speed
-            else:
+        if self.is_moving:
+            # 移动弹窗：只检查是否移出屏幕
+            self.x += 50
+            # 如果窗口完全移出屏幕右侧，则结束生命周期
+            if self.x > pygame.display.get_surface().get_width():
                 return False
+            # 确保透明度为最大
+            if self.alpha < 255:
+                self.alpha = 255
+        else:
+            # 非移动弹窗：使用原有的生命周期管理
+            if self.life_time < self.max_life_time:
+                if self.alpha < 255:
+                    self.alpha += self.fade_speed
+                self.life_time += 1
+            else:
+                if self.alpha > 0:
+                    self.alpha -= self.fade_speed
+                else:
+                    return False
         return True
 
     def draw(self, screen):
@@ -66,9 +97,8 @@ class PopupWindow:
         pygame.draw.rect(shadow_surface, (0, 0, 0, 100), (0, 0, self.width + 4, self.height + 4), border_radius=10)
         screen.blit(shadow_surface, (self.x - 2, self.y - 2))
         
-        # 绘制窗口背景
-        pygame.draw.rect(self.surface, (*self.bg_color, self.alpha), (0, 0, self.width, self.height), border_radius=10)
-        pygame.draw.rect(self.surface, (*self.text_color, self.alpha), (0, 0, self.width, self.height), 2, border_radius=10)
+        # 绘制预渲染的背景
+        self.surface.blit(self.bg_surface, (0, 0))
         
         if self.display_mode == 1:  # 竖向
             # 竖向渲染文字
@@ -79,8 +109,8 @@ class PopupWindow:
                 char_rect = char_surface.get_rect(center=(self.width // 2, 20 + i * char_height))
                 self.surface.blit(char_surface, char_rect)
         elif self.display_mode == 2:  # 45度角
-            # 渲染文字
-            text_surface = self.font.render(self.text, True, self.text_color)
+            # 使用预渲染的文字表面
+            text_surface = self.text_surface.copy()
             text_surface.set_alpha(self.alpha)
             # 旋转文字
             rotated_text = pygame.transform.rotate(text_surface, 45)
@@ -91,8 +121,8 @@ class PopupWindow:
             text_rect.y += (self.height - rotated_text.get_height()) // 2
             self.surface.blit(rotated_text, text_rect)
         else:  # 横向
-            # 横向渲染文字
-            text_surface = self.font.render(self.text, True, self.text_color)
+            # 使用预渲染的文字表面
+            text_surface = self.text_surface.copy()
             text_surface.set_alpha(self.alpha)
             text_rect = text_surface.get_rect(center=(self.width // 2, self.height // 2))
             self.surface.blit(text_surface, text_rect)
@@ -166,9 +196,12 @@ class StudentEncouragementApp:
         # 设置弹出窗口
         self.popup_windows = []
         self.current_window = 0
-        self.total_windows = 5000
-        self.windows_per_frame = 5
+        self.total_windows = 1000
+        self.windows_per_frame = 2  # 减少每帧生成的弹窗数量
+        self.max_windows = 200  # 限制最大同时存在的弹窗数量
         self.is_running = False
+        self.move_speed = 5  # 设置移动速度
+        self.cleared_at_5_percent = False  # 标记是否已经清除过弹窗
         
         # 设置鼓励语
         self.encouragements = [
@@ -212,7 +245,7 @@ class StudentEncouragementApp:
         self.progress = 0
         self.total_windows = 5000  # 增加总窗口数量
         self.current_window = 0
-        self.windows_per_frame = 5  # 每帧生成的窗口数量
+        self.windows_per_frame = 2  # 每帧生成的窗口数量
         
         # 创建按钮
         button_font = pygame.font.Font("simhei.ttf", 24)
@@ -264,7 +297,15 @@ class StudentEncouragementApp:
             self.popup_windows.clear()
 
     def get_random_position(self):
-        # 计算网格大小
+        # 如果进度超过5%，则从左侧生成
+        if self.progress >= 5:
+            # 随机选择左侧的y坐标
+            y = random.randint(50, self.screen_height - 50)
+            # 从屏幕左侧开始
+            x = -100  # 从屏幕外开始
+            return x, y
+        
+        # 否则使用原来的随机位置生成
         grid_size = 150  # 增大网格大小以适应全屏
         # 计算可用的网格数量
         cols = (self.screen_width - 1) // grid_size
@@ -275,16 +316,29 @@ class StudentEncouragementApp:
         row = random.randint(0, rows - 1)
         
         # 在网格内随机位置
-        x =   col * grid_size + random.randint(10, grid_size - 10)
-        y =   row * grid_size + random.randint(10, grid_size - 10)
+        x = col * grid_size + random.randint(10, grid_size - 10)
+        y = row * grid_size + random.randint(10, grid_size - 10)
         
         return x, y
 
+    def clear_all_windows(self):
+        """清除所有现有的弹窗"""
+        self.popup_windows.clear()
+        self.cleared_at_5_percent = True
+
     def update(self):
         if self.is_running and self.current_window < self.total_windows:
-            # 每帧创建多个窗口
+            # 检查是否达到5%进度且未清除过弹窗
+            if self.progress >= 5 and not self.cleared_at_5_percent:
+                self.clear_all_windows()
+            
+            # 每帧创建多个窗口，但不超过最大限制
             for _ in range(self.windows_per_frame):
                 if self.current_window >= self.total_windows:
+                    break
+                    
+                # 如果当前弹窗数量达到上限，停止生成新的
+                if len(self.popup_windows) >= self.max_windows:
                     break
                     
                 # 创建新的弹出窗口
@@ -296,8 +350,11 @@ class StudentEncouragementApp:
                 # 随机选择显示模式 (0: 横向, 1: 竖向, 2: 45度角)
                 display_mode = random.randint(0, 1)
                 
+                # 根据进度决定是否添加移动速度
+                move_speed = self.move_speed if self.progress >= 5 else 0
+                
                 self.popup_windows.append(
-                    PopupWindow(text, x, y, bg_color, text_color, self.popup_font, display_mode)
+                    PopupWindow(text, x, y, bg_color, text_color, self.popup_font, display_mode, move_speed)
                 )
                 
                 self.current_window += 1
@@ -306,7 +363,7 @@ class StudentEncouragementApp:
             if self.current_window >= self.total_windows:
                 self.is_running = False
 
-        # 更新所有弹出窗口
+        # 更新所有弹出窗口，并移除已经结束的窗口
         self.popup_windows = [window for window in self.popup_windows if window.update()]
 
     def draw(self):
@@ -373,7 +430,7 @@ class StudentEncouragementApp:
             
             self.update()
             self.draw()
-            self.clock.tick(60) # 设置为每秒60帧
+            self.clock.tick(30) # 设置为每秒60帧
         
         pygame.quit()
         sys.exit()
