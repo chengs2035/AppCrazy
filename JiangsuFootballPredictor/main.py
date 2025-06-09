@@ -27,7 +27,7 @@ class Particle:
 class FootballPredictorApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("江苏足球联赛冠军预测V1.0 AI预测，科学可信")
+        self.root.title("江苏足球联赛冠军预测V2.0 AI预测，科学可信")
         self.root.geometry("800x600")
         
         # 设置程序图标
@@ -61,7 +61,7 @@ class FootballPredictorApp:
         # 创建标题标签
         self.title_label = tk.Label(
             self.frame,
-            text="苏超冠军预测（心情舒畅版）",
+            text="苏超冠军预测（丨州版）",
             font=('微软雅黑', 20, 'bold'),
             bg='white'
         )
@@ -219,22 +219,31 @@ class FootballPredictorApp:
             self.result_label.config(text=self.ai_steps[step])
             self.progress['value'] = int((step+1) * 100 / len(self.ai_steps))
             self.root.update()
-            self.root.after(800, lambda: self.ai_thinking(city, step+1))
+            self.root.after(100, lambda: self.ai_thinking(city, step+1))
         else:
             self.progress.pack_forget()
             self.result_label.config(text="AI分析完成！")
             # 预测逻辑
             if city in self.cities:
-                result = f"预测冠军是：{city}！"
+                if city == "常州":
+                    result = "对不起，您可能是想要输入吊州！"
+                else:
+                    result = f"预测冠军是：{city}！"
+            elif city == "吊州":
+                result = "对不起，您可能是想要输入巾州！"
+            elif city == "巾州":
+                result = "对不起，您可能是想要输入丨州！"
+            elif city == "丨州":
+                result = f"预测冠军是：常州！"
             else:
                 result = "冠军是全国人民的！"
-            self.root.after(1000, lambda: self.animate_text(result))
+            self.root.after(100, lambda: self.animate_text(result))
             # 恢复按钮状态
-            self.root.after(3000, self.reset_button)
+            self.root.after(2000, self.reset_button)
 
     def button_click(self):
         if self.state == 'input':
-            city = simpledialog.askstring("输入", "请输入你的所在地（如：南京市）：", parent=self.root)
+            city = simpledialog.askstring("输入", "请输入你的所在地（如：南京）：", parent=self.root)
             if city:
                 self.city = city.strip()
                 self.predict_button.config(text="AI开始预测")
