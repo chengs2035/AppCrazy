@@ -7,8 +7,8 @@ from src.utils import load_image, load_sound, random_position
 class Game:
     def __init__(self):
         # 设置窗口
-        self.width = 800
-        self.height = 600
+        self.width = 1024
+        self.height = 768
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption("拍蚊子游戏")
         
@@ -32,9 +32,9 @@ class Game:
         """加载游戏资源"""
         # 加载图片
         self.background = load_image("HitMosquito/assets/images/background.png", (self.width, self.height))
-        self.mosquito_img = load_image("HitMosquito/assets/images/mosquito.png", (60, 60))
-        self.mosquito_close_img = load_image("HitMosquito/assets/images/mosquito_close.png", (60, 60))  # 加载第二张蚊子图片
-        self.hand_cursor = load_image("HitMosquito/assets/images/hand.png", (32, 32))
+        self.mosquito_img = load_image("HitMosquito/assets/images/mosquito.png", (120, 120))
+        self.mosquito_close_img = load_image("HitMosquito/assets/images/mosquito_close.png", (120, 120))  # 加载第二张蚊子图片
+        self.hand_cursor = load_image("HitMosquito/assets/images/hand.png", (150, 150))
         
         # 加载音效
         self.hit_sound = load_sound("HitMosquito/assets/sounds/hit.mp3")
